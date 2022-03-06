@@ -13,10 +13,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR}Network)
+
 
 set(PROJECT_SOURCES
         main.cpp
         qml.qrc
+        Core/DownloaderCore.h Core/DownloaderCore.cpp
+        Network/FileDownloader.h Network/FileDownloader.cpp
+        Core/DownloaderWrapper.h Core/DownloaderWrapper.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -45,7 +50,10 @@ endif()
 target_compile_definitions(SimpleDownloadManager
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(SimpleDownloadManager
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core
+  Qt${QT_VERSION_MAJOR}::Quick
+  Qt${QT_VERSION_MAJOR}::Network
+  )
 
 set_target_properties(SimpleDownloadManager PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
