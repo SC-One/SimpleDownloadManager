@@ -22,6 +22,7 @@ set(PROJECT_SOURCES
         Core/DownloaderCore.h Core/DownloaderCore.cpp
         Network/FileDownloader.h Network/FileDownloader.cpp
         Core/DownloaderWrapper.h Core/DownloaderWrapper.cpp
+        Core/FileDownloaderModel.h Core/FileDownloaderModel.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
