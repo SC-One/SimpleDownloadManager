@@ -2,6 +2,11 @@
 #include <QMutexLocker>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+bool FileDownloader::operator==(const QUuid& uid)
+{
+    return id() == uid;
+}
+
 FileDownloader::FileDownloader(QObject* parent)
     : QObject{parent}
 {
@@ -12,7 +17,7 @@ FileDownloader::FileDownloader(QObject* parent)
     setId(QUuid::createUuid());
 }
 
-const QString& FileDownloader::url() const
+QString FileDownloader::url() const
 {
     return _url;
 }
@@ -26,7 +31,7 @@ void FileDownloader::setUrl(const QString& newUrl)
     emit urlChanged();
 }
 
-const QString& FileDownloader::fileCompleteAddress() const
+QString FileDownloader::fileCompleteAddress() const
 {
     QMutexLocker locker(&_fileAddressMutex);
     return _fileCompleteAddress;
@@ -112,16 +117,39 @@ void FileDownloader::setId(const QUuid& newId)
     emit idChanged();
 }
 
-const QUuid& FileDownloader::id() const
+QUuid FileDownloader::id() const
 {
     QMutexLocker locker(&_idLocker);
     return _id;
 }
 
-qreal FileDownloader::progressbar() const
+qreal FileDownloader::progressbar()
 {
     QMutexLocker locker(&_progressBarMutex);
     return _progressbar;
+}
+
+void FileDownloader::stop()
+try
+{
+    if(_replay->isRunning())
+    {
+        _replay->abort();
+        _replay->close();
+    }
+}
+catch(...)
+{
+    // still nothing
+}
+
+void FileDownloader::start()
+{
+    if(_replay->isRunning())
+    {
+        _replay->close();
+    }
+    startDownload();
 }
 
 void FileDownloader::setProgressbar(qreal newProgressbar)
@@ -133,7 +161,7 @@ void FileDownloader::setProgressbar(qreal newProgressbar)
     emit downloadProgressChanged();
 }
 
-const QString& FileDownloader::lastError() const
+QString FileDownloader::lastError() const
 {
     return _lastError;
 }

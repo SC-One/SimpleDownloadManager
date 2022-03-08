@@ -4,10 +4,7 @@ FileDownloaderModel::FileDownloaderModel(QObject* parent)
     : QAbstractListModel{parent}
 {
     _roles = QHash<int, QByteArray>{
-        {FileDownloaderModel::FileDownloaderRoles::ID, "ID"},
-        {FileDownloaderModel::FileDownloaderRoles::FileNameAddress, "FileNameAddress"},
-        {FileDownloaderModel::FileDownloaderRoles::URL, "URL"},
-        {FileDownloaderModel::FileDownloaderRoles::ProgressPercent, "ProgressPercent"}};
+        {FileDownloaderModel::FileDownloaderRoles::WorkerInfo, "WorkerInfo"}};
 }
 
 int FileDownloaderModel::rowCount(const QModelIndex& parent) const
@@ -25,20 +22,8 @@ QVariant FileDownloaderModel::data(const QModelIndex& index, int role) const
     auto const row = index.row();
     if(row > _workers.size())
         return {};
-    auto& res = _workers[row];
-    switch(role)
-    {
-    case FileDownloaderModel::ID:
-        return res.lock()->id();
-    case FileDownloaderModel::FileNameAddress:
-        return res.lock()->fileCompleteAddress();
-    case FileDownloaderModel::URL:
-        return res.lock()->url();
-    case FileDownloaderModel::ProgressPercent:
-        return res.lock()->progressbar();
-    default:
-        return "";
-    }
+    auto res = _workers[row];
+    return *(res.lock().get());
 }
 
 QVariant FileDownloaderModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -65,7 +50,7 @@ bool FileDownloaderModel::addFileDownloader(const QWeakPointer<FileDownloader>& 
 
 void FileDownloaderModel::generateHeader()
 {
-    for(int i = FileDownloaderModel::ID; i <= FileDownloaderModel::ProgressPercent; ++i)
+    for(int i = FileDownloaderModel::WorkerInfo; i <= FileDownloaderModel::WorkerInfo; ++i)
     {
         setHeaderData(0, Qt::Horizontal, _roles[i], i);
     }

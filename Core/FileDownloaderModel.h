@@ -1,6 +1,16 @@
 #ifndef FILEDOWNLOADERMODEL_H
 #define FILEDOWNLOADERMODEL_H
 
+//#include "Network/FileDownloader.h"
+//#include <QAbstractListModel>
+//#include <QObject>
+//#include <QQmlEngine>
+//class FileDownloaderModel : public QAbstractListModel
+//{
+//    Q_OBJECT
+//public:
+//    FileDownloaderModel(QObject* parent = nullptr);
+
 #include "Network/FileDownloader.h"
 #include <QAbstractListModel>
 #include <QObject>
@@ -13,10 +23,7 @@ public:
 
     enum FileDownloaderRoles
     {
-        ID = Qt::UserRole + 1,
-        FileNameAddress,
-        URL,
-        ProgressPercent
+        WorkerInfo = Qt::UserRole + 1
     };
     Q_ENUM(FileDownloaderRoles)
 public:
@@ -31,7 +38,7 @@ public:
     ///////////////////////////////////////////////////////////////////
 
 public:
-    Q_INVOKABLE bool addFileDownloader(const QWeakPointer<FileDownloader> &data);
+    Q_INVOKABLE bool addFileDownloader(const QWeakPointer<FileDownloader>& data);
     Q_INVOKABLE void generateHeader();
     Q_INVOKABLE bool contains(const QUuid& workerUuid);
     Q_INVOKABLE QWeakPointer<FileDownloader> getFileDownloader(const QUuid& workerUuid) const
@@ -52,7 +59,7 @@ public:
 public:
     static inline void RegisterToQML()
     {
-        qRegisterMetaType<FileDownloader>("FileDownloader");
+        qmlRegisterType<FileDownloader>("ir.hcoding.models", 1, 0, "FileDownloader");
         qmlRegisterType<FileDownloaderModel>("ir.hcoding.models", 1, 0, "FileDownloaderModel");
     }
 
@@ -61,4 +68,5 @@ private:
     QVector<QWeakPointer<FileDownloader>> _workers;
 };
 
+Q_DECLARE_METATYPE(FileDownloader)
 #endif // FILEDOWNLOADERMODEL_H

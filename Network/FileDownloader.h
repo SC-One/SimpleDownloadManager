@@ -3,6 +3,7 @@
 #include <QObject>
 
 #include <QByteArray>
+#include <QDebug>
 #include <QFile>
 #include <QMutex>
 #include <QNetworkReply>
@@ -16,17 +17,13 @@ class FileDownloader : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
-    Q_PROPERTY(QString filefileCompleteAddress READ filefileCompleteAddress WRITE
-                   setFilefileCompleteAddress NOTIFY filefileCompleteAddressChanged)
+    Q_PROPERTY(QString fileAddress READ fileCompleteAddress NOTIFY fileAddressChanged)
     Q_PROPERTY(qreal progressbar READ progressbar NOTIFY downloadProgressChanged)
     Q_PROPERTY(QString fileAddress READ fileCompleteAddress /*WRITE setFileCompleteAddress*/ NOTIFY
                    fileAddressChanged)
     Q_PROPERTY(QString url READ url /*WRITE setUrl*/ NOTIFY urlChanged)
 public:
-    inline bool operator==(const QUuid& uid) const
-    {
-        return id() == uid;
-    }
+    bool operator==(const QUuid& uid);
     enum DownloadStatus
     {
         Started,
@@ -35,27 +32,15 @@ public:
         Completed
     };
     explicit FileDownloader(QObject* parent = nullptr);
-    const QString& url() const;
+    QString url() const;
     void setUrl(const QString& newUrl);
 
-    const QString& fileCompleteAddress() const;
+    QString fileCompleteAddress() const;
     void setFileCompleteAddress(const QString& newFileCompleteAddress);
 
-    qreal progressbar() const;
+    qreal progressbar();
 
-    inline void stop()
-    try
-    {
-        if(_replay->isRunning())
-        {
-            _replay->abort();
-            _replay->close();
-        }
-    }
-    catch(...)
-    {
-        // still nothing
-    }
+    void stop();
 
     ///
     /// \brief start always before run this method set url and file address by methods :
@@ -63,15 +48,8 @@ public:
     ///
     /// and always run this method concurrent because
     ///
-    inline void start()
-    {
-        if(_replay->isRunning())
-        {
-            _replay->close();
-        }
-        startDownload();
-    }
-    const QUuid& id() const;
+    void start();
+    QUuid id() const;
 
 signals:
     void downloaded();
@@ -83,7 +61,7 @@ signals:
 private:
     void setId(const QUuid& newId);
     void setProgressbar(qreal newProgressbar);
-    const QString& lastError() const;
+    QString lastError() const;
     void setLastError([[maybe_unused]] QNetworkReply::NetworkError newLastError);
     void setLastError(const QString& newLastError);
     ///
@@ -111,5 +89,4 @@ private:
     QFile _downloadedFile;
     QUuid _id;
 };
-
 #endif // FILEDOWNLOADER_H

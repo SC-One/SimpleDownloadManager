@@ -1,7 +1,5 @@
 #include "DownloaderCore.h"
 
-namespace DownloadManager
-{
 DownloaderCore::DownloaderCore(QObject* parent)
     : QObject{parent}
 {
@@ -10,11 +8,10 @@ DownloaderCore::DownloaderCore(QObject* parent)
 
 void DownloaderCore::startDownloadNewURL(const QString& url, const QString& fileAddressComplete)
 {
-    auto newFIleDownloader = QSharedPointer<FileDownloader>::create();
+    QSharedPointer<FileDownloader> newFIleDownloader(new FileDownloader());
     newFIleDownloader->setUrl(url);
     newFIleDownloader->setFileCompleteAddress(fileAddressComplete);
     _workers.insert(newFIleDownloader->id(), newFIleDownloader);
-    emit workersChanged();
+    _model.addFileDownloader(newFIleDownloader);
     _pool.start([this, newFIleDownloader]() { newFIleDownloader->start(); });
 }
-} // namespace DownloadManager
