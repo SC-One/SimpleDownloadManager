@@ -1,6 +1,6 @@
 #ifndef DOWNLOADERCORE_H
 #define DOWNLOADERCORE_H
-#include "Network/FileDownloader.h"
+#include "FileDownloaderModel.h"
 #include <QObject>
 #include <QQmlEngine>
 #include <QRunnable>
@@ -11,26 +11,28 @@
 class DownloaderCore : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int sizeOfModel READ getSizeOfModel WRITE setSizeOfModel NOTIFY modelUpdated)
+    Q_PROPERTY(QAbstractListModel* model READ rawModel NOTIFY modelUpdated)
 public:
     explicit DownloaderCore(QObject* parent = nullptr);
     Q_INVOKABLE void startDownloadNewURL(const QString& url, const QString& fileAddressComplete);
     static inline void registerToQML()
     {
-        qmlRegisterType<FileDownloader>("ir.hcoding.models", 1, 1, "FileDownloader");
+        FileDownloaderModel::RegisterToQML();
         qmlRegisterType<DownloaderCore>("ir.hcoding.models", 1, 1, "DownloaderCore");
     }
 
-    Q_INVOKABLE QVariantList model();
-    int getSizeOfModel() const;
-    void setSizeOfModel(int newSizeOfModel);
+    QWeakPointer<FileDownloaderModel> model() const;
+
+private:
+    void setModel(QSharedPointer<FileDownloaderModel> newModel);
+    QAbstractListModel* rawModel() const;
 
 signals:
     void modelUpdated();
 
 private:
-    int sizeOfModel;
     QThreadPool _pool;
+    QSharedPointer<FileDownloaderModel> _model;
     QMap<QUuid, QSharedPointer<FileDownloader>> _workers;
 };
 #endif // DOWNLOADERCORE_H

@@ -2,7 +2,7 @@
 //#define TEST_USE_CASE
 DownloaderCore::DownloaderCore(QObject* parent)
     : QObject{parent}
-    , sizeOfModel(0)
+    , _model(new FileDownloaderModel())
 {
     qDebug() << QStringLiteral("DownloaderCore has threadpool with %1").arg(_pool.stackSize());
 }
@@ -13,35 +13,22 @@ void DownloaderCore::startDownloadNewURL(const QString& url, const QString& file
     newFIleDownloader->setUrl(url);
     newFIleDownloader->setFileCompleteAddress(fileAddressComplete);
     _workers.insert(newFIleDownloader->id(), newFIleDownloader);
-    setSizeOfModel(getSizeOfModel() + 1);
+    _model->addFileDownloader(newFIleDownloader);
     _pool.start([this, newFIleDownloader]() { newFIleDownloader->start(); });
 }
 
-QVariantList DownloaderCore::model()
+QWeakPointer<FileDownloaderModel> DownloaderCore::model() const
 {
-    /*QList<FileDownloader*> */ QVariantList result;
-    auto const model = _workers.values();
-    for(auto const& item : model)
-    {
-        result.append(item.get());
-    }
-    return result;
+    return _model;
 }
 
-int DownloaderCore::getSizeOfModel() const
+void DownloaderCore::setModel(QSharedPointer<FileDownloaderModel> newModel)
 {
-    return sizeOfModel;
-}
-
-void DownloaderCore::setSizeOfModel(int newSizeOfModel)
-{
-    sizeOfModel = newSizeOfModel;
+    _model = newModel;
     emit modelUpdated();
 }
 
-//#ifdef TEST_USE_CASE
-//void addTestParams()
-//{
-
-//}
-//#endif
+QAbstractListModel* DownloaderCore::rawModel() const
+{
+    return _model.get();
+}

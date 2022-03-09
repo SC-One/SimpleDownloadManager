@@ -16,14 +16,8 @@ class QNetworkReply;
 class FileDownloader : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
-    Q_PROPERTY(QString fileAddress READ fileCompleteAddress NOTIFY fileAddressChanged)
-    Q_PROPERTY(qreal progressbar READ progressbar NOTIFY downloadProgressChanged)
-    Q_PROPERTY(QString fileAddress READ fileCompleteAddress /*WRITE setFileCompleteAddress*/ NOTIFY
-                   fileAddressChanged)
-    Q_PROPERTY(QString url READ url /*WRITE setUrl*/ NOTIFY urlChanged)
 public:
-    bool operator==(const QUuid& uid);
+    bool operator==(const QUuid& uid) const;
     enum DownloadStatus
     {
         Started,
@@ -32,6 +26,7 @@ public:
         Completed
     };
     explicit FileDownloader(QObject* parent = nullptr);
+    ~FileDownloader();
     QString url() const;
     void setUrl(const QString& newUrl);
 
@@ -57,6 +52,8 @@ signals:
     void fileAddressChanged();
     void urlChanged();
     void idChanged();
+
+    void errorOccured(const QString& error);
 
 private:
     void setId(const QUuid& newId);

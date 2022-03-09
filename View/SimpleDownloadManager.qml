@@ -25,13 +25,12 @@ Rectangle {
 //            }
 //        }
 //    }
-    property var list: [];
     Item {
         id: props
         HCoding.DownloaderCore{
             id:downloadManagerCore
-            onSizeOfModelChanged:
-                simpleDownloadManager.list = downloadManagerCore.model();
+//            onSizeOfModelChanged:
+//                simpleDownloadManager.list = downloadManagerCore.model();
         }
         FileDialog{
             id:saveFile
@@ -49,10 +48,13 @@ Rectangle {
         anchors.fill:parent
         RowLayout
         {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.alignment: Qt.AlignTop
             TextInput{
                 id:url
                 Layout.fillWidth: true
-                text:"http://dl.golsarmusic.ir/GolsarMusic-Root/99/07%20Mehr/15/cuban%20pete.mp3"
+                text:"http://magnatune.com/"
             }
             TextInput{
                 id:fileAddress
@@ -74,30 +76,37 @@ Rectangle {
 
         GridLayout
         {
+            Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.alignment: Qt.AlignTop
+            columns: 1
             Repeater
             {
                 id:fileDownloaderRepeater
-                model:downloadManagerCore.sizeOfModel
+                model:downloadManagerCore.model
                 delegate: Rectangle{
-                    Layout.minimumHeight: 50
-                    Layout.minimumWidth: 170
+                    id:rootDownloadItemWrapper
+                    property var viewDownloaderCore: WorkerInfo
+                    Layout.minimumHeight: 70
+                    Layout.minimumWidth: childrenRect.width
                     color:"white"
                     RowLayout{
                         anchors.fill: parent
                         Text{
-                            id:nameText
-                            text: simpleDownloadManager.list[fileDownloaderRepeater.count].fileAddress
+                            id:urlText
+                            text: rootDownloadItemWrapper.viewDownloaderCore.url
                         }
                         ProgressBar {
-                            Layout.fillWidth: true
-                            value: simpleDownloadManager.list[fileDownloaderRepeater.count].progressbar;
+                            width: 140
+                            height:20
+                            Layout.fillWidth: true;
+                            value: rootDownloadItemWrapper.viewDownloaderCore.progressbar;
                             from : 0
                             to : 100
                         }
                         Text{
-                            id:urlText
-                            text: simpleDownloadManager.list[fileDownloaderRepeater.count].url
+                            id:nameText
+                            text: rootDownloadItemWrapper.viewDownloaderCore.fileAddress
                         }
                     }
                 }
