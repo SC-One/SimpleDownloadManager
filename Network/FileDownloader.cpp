@@ -145,11 +145,14 @@ catch(...)
 
 void FileDownloader::start()
 {
-    if(_replay->isRunning())
+    if(_replay != nullptr)
     {
-        _replay->close();
+        //        if(_replay->isRunning())
+        //        {
+        //            _replay->close();
+        //        }
+        startDownload();
     }
-    startDownload();
 }
 
 void FileDownloader::setProgressbar(qreal newProgressbar)
