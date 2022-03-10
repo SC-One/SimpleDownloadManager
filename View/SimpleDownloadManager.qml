@@ -54,7 +54,7 @@ Rectangle {
             TextInput{
                 id:url
                 Layout.fillWidth: true
-                text:"http://magnatune.com/"
+                text:"http://www.iran.ir/"
             }
             TextInput{
                 id:fileAddress

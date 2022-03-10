@@ -23,12 +23,15 @@ public:
 
     QWeakPointer<FileDownloaderModel> model() const;
 
+    void insertNewModel(const QSharedPointer<FileDownloader>& newFIleDownloader);
+
 private:
     void setModel(QSharedPointer<FileDownloaderModel> newModel);
     QAbstractListModel* rawModel() const;
 
 signals:
     void modelUpdated();
+    void newFileDownloaderAdded(QSharedPointer<FileDownloader>);
 
 private:
     QThreadPool _pool;

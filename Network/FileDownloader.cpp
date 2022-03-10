@@ -5,6 +5,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QTimer>
+#include <iostream>
 bool FileDownloader::operator==(const QUuid& uid) const
 {
     return id() == uid;
@@ -17,8 +18,9 @@ FileDownloader::FileDownloader(QObject* parent)
     x->setInterval(1000);
     connect(x, &QTimer::timeout, this, [this]() {
         if(_replay != nullptr)
-            qDebug() << _replay->isRunning() << _replay->errorString() << _replay->bytesToWrite()
-                     << _replay->bytesAvailable() << _replay->waitForReadyRead(100);
+            std::cerr << _replay->isRunning() << _replay->errorString().toStdString()
+                      << _replay->bytesToWrite() << _replay->bytesAvailable()
+                      << _replay->waitForReadyRead(100) << isHttpRedirect();
     });
     x->start(1000);
     setId(QUuid::createUuid());
@@ -27,13 +29,13 @@ FileDownloader::FileDownloader(QObject* parent)
         _downloadedFile.setFileName(QDir::toNativeSeparators(nativeAddress.toLocalFile()));
     });
     connect(this, &FileDownloader::errorOccured, this, [this](const QString& error) {
-        qDebug() << error;
+        std::cerr << error.toStdString();
     });
 }
 
 FileDownloader::~FileDownloader()
 {
-    qDebug() << "Deleted FileDownloader" << id();
+    std::cerr << "Deleted FileDownloader" << id().toString().toStdString();
 }
 
 QString FileDownloader::url() const
@@ -139,6 +141,17 @@ try
 }
 catch(...)
 {
+    return false;
+}
+
+bool FileDownloader::isHttpRedirect() const
+{
+    if(_replay)
+    {
+        int statusCode = _replay->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        return statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 305 ||
+               statusCode == 307 || statusCode == 308;
+    }
     return false;
 }
 

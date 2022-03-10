@@ -71,6 +71,8 @@ private:
     void closeFile();
     bool clearFile();
 
+    bool isHttpRedirect() const;
+
 private:
     QScopedPointer<QNetworkAccessManager> _webCtrl;
     QNetworkReply* _replay;
