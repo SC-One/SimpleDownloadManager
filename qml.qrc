@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>View/SimpleDownloadManager.qml</file>
+        <file>View/CircularProgressBar.qml</file>
+        <file>View/InputURLDialog.qml</file>
     </qresource>
 </RCC>

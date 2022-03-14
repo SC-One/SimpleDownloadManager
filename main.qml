@@ -9,4 +9,12 @@ Window {
     SimpleDownloadManagerView.SimpleDownloadManager{
         anchors.fill: parent
     }
+
+//    SimpleDownloadManagerView.CircularProgressBar{
+//        id:circle
+//        anchors.centerIn: parent
+//        width:parent.width*0.8
+//        height:parent.height*0.8
+//        onClicked: circle.value+=12.5;
+//    }
 }
