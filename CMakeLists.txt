@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 
 project(SimpleDownloadManager VERSION 0.1 LANGUAGES CXX)
 
+include(FindPkgConfig)
+pkg_check_modules(CURLPP REQUIRED curlpp)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -55,6 +58,7 @@ target_link_libraries(SimpleDownloadManager
   PRIVATE Qt${QT_VERSION_MAJOR}::Core
   Qt${QT_VERSION_MAJOR}::Quick
   Qt${QT_VERSION_MAJOR}::Network
+  ${CURLPP_LDFLAGS}
   )
 
 set_target_properties(SimpleDownloadManager PROPERTIES

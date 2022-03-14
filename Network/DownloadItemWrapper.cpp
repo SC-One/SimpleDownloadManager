@@ -74,7 +74,10 @@ void DownloadItemWrapper::initDefaultConnections()
         _fileDownloaderCore.get(),
         &FileDownloader::downloadProgressChanged,
         this,
-        [this]() { setProgressPercentage(_fileDownloaderCore->progressbar()); },
+        [this](qreal newProgressbar) {
+            int a;
+            setProgressPercentage(newProgressbar);
+        },
         Qt::QueuedConnection);
     connect(
         _fileDownloaderCore.get(),

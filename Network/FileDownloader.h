@@ -11,6 +11,14 @@
 #include <QObject>
 #include <QString>
 #include <QUuid>
+
+#include <atomic>
+#include <curlpp/Easy.hpp>
+#include <curlpp/Exception.hpp>
+#include <curlpp/Options.hpp>
+#include <curlpp/cURLpp.hpp>
+#include <fstream>
+#include <iostream>
 class QNetworkAccessManager;
 class QNetworkReply;
 class FileDownloader : public QObject
@@ -48,7 +56,7 @@ public:
 
 signals:
     void downloaded();
-    void downloadProgressChanged();
+    void downloadProgressChanged(qreal newProgressPercentage);
     void fileAddressChanged();
     void urlChanged();
     void idChanged();
@@ -61,6 +69,7 @@ private:
     QString lastError() const;
     void setLastError([[maybe_unused]] QNetworkReply::NetworkError newLastError);
     void setLastError(const QString& newLastError);
+    void setLastError(const std::string& newLastError);
     ///
     /// \brief startDownload
     ///
@@ -71,11 +80,14 @@ private:
     void closeFile();
     bool clearFile();
 
-    bool isHttpRedirect() const;
+    //    bool isHttpRedirect() const;
+
+    void downloadFileFromBegining(const std::string& nameOfFile, const std::string& url);
+    void downloadFileFromBegining(const QString& nameOfFile, const QString& url);
 
 private:
-    QScopedPointer<QNetworkAccessManager> _webCtrl;
-    QNetworkReply* _replay;
+    //    QScopedPointer<QNetworkAccessManager> _webCtrl;
+    //    QNetworkReply* _replay;
 
     mutable QMutex _progressBarMutex;
     mutable QMutex _fileAddressMutex;
@@ -84,8 +96,12 @@ private:
     qreal _progressbar;
     QString _url;
     QString _lastError;
-    QString _fileCompleteAddress; // TODO
+    QString _fileCompleteAddress;
     QFile _downloadedFile;
     QUuid _id;
+
+    std::ofstream _streamDownloadedData;
+    curlpp::Easy _curlHandler;
+    int _stopRet;
 };
 #endif // FILEDOWNLOADER_H

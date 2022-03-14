@@ -18,6 +18,7 @@ void DownloaderCore::startDownloadNewURL(const QString& url, const QString& file
         QSharedPointer<FileDownloader> newFIleDownloader(new FileDownloader());
         newFIleDownloader->setUrl(url);
         newFIleDownloader->setFileCompleteAddress(fileAddressComplete);
+        insertNewModel(newFIleDownloader);
         newFIleDownloader->start();
     });
 }

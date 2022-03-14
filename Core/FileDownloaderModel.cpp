@@ -42,10 +42,10 @@ bool FileDownloaderModel::addFileDownloader(const QWeakPointer<FileDownloader>& 
     auto coreDownloader = data.lock();
     if(!coreDownloader.isNull())
     {
-        if(contains(coreDownloader->id()))
-        {
-            return false;
-        }
+        //        if(contains(coreDownloader->id()))
+        //        {
+        //            return false;
+        //        }
         beginInsertRows(QModelIndex(), _workers.size(), _workers.size());
         _workers.push_back(
             QSharedPointer<DownloadItemWrapper>::create(DownloadItemWrapper{coreDownloader}));

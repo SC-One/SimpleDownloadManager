@@ -46,19 +46,20 @@ Rectangle {
     ColumnLayout
     {
         anchors.fill:parent
-        RowLayout
+        ColumnLayout
         {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+//            Layout.fillHeight: true
             Layout.alignment: Qt.AlignTop
             TextInput{
                 id:url
-                Layout.fillWidth: true
-                text:"http://www.iran.ir/"
+//                Layout.fillHeight: true
+                text:"https://camo.githubusercontent.com/52fa9afe98c94dc246c5d9db604e9f214cff1994a2b4974d96ee1f3dd5f0da80/68747470733a2f2f73362e7575706c6f61642e69722f66696c65732f64726f705f646f776e5f696e7075745f746578745f696e5f716d6c5f7461392e676966"
             }
             TextInput{
                 id:fileAddress
-                Layout.maximumWidth: 100
+                Layout.minimumHeight: 70
+                Layout.maximumHeight: 100
                 text:"file:///home/sc/prj/Qt/SimpleDownloadManager/build-SimpleDownloadManager-Desktop_Qt_5_15_2_GCC_64bit-Debug/MyFile"
                 Layout.fillWidth: true
                 onFocusChanged: {
@@ -74,12 +75,12 @@ Rectangle {
             }
         }
 
-        GridLayout
+        ColumnLayout
         {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignTop
-            columns: 1
+//            columns: 1
             Repeater
             {
                 id:fileDownloaderRepeater
@@ -90,22 +91,46 @@ Rectangle {
                     Layout.minimumHeight: 70
                     Layout.minimumWidth: childrenRect.width
                     color:"white"
-                    RowLayout{
+                    ColumnLayout{
                         anchors.fill: parent
                         Text{
                             id:urlText
+                            Layout.minimumHeight: 77;
+                            Layout.fillWidth: true;
                             text: rootDownloadItemWrapper.viewDownloaderCore.url
                         }
                         ProgressBar {
                             width: 140
-                            height:20
+                            height:100
                             Layout.fillWidth: true;
+                            Layout.minimumHeight: 100;
+                            Layout.maximumHeight: 200;
+                            Layout.minimumWidth: 140;
+                            ToolTip{
+                                id:tltip
+                                text: "Value: 0";
+                            }
+
+                            MouseArea{
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onExited: tltip.visible=false;
+                                onEntered: tltip.visible=true;
+                            }
+                            property int  index: 0
                             value: rootDownloadItemWrapper.viewDownloaderCore.progressbar;
+                            onValueChanged:{
+                                tltip.text = "Value: "+value;
+                                index++;
+                                console.log("index",index);
+                        }
                             from : 0
                             to : 100
                         }
                         Text{
                             id:nameText
+                            Layout.fillWidth: true;
+                            Layout.minimumHeight: 77;
                             text: rootDownloadItemWrapper.viewDownloaderCore.fileAddress
                         }
                     }
