@@ -6,8 +6,6 @@
 #include <QDebug>
 #include <QFile>
 #include <QMutex>
-#include <QNetworkReply>
-#include <QNetworkRequest>
 #include <QObject>
 #include <QString>
 #include <QUuid>
@@ -67,7 +65,6 @@ private:
     void setId(const QUuid& newId);
     void setProgressbar(qreal newProgressbar);
     QString lastError() const;
-    void setLastError([[maybe_unused]] QNetworkReply::NetworkError newLastError);
     void setLastError(const QString& newLastError);
     void setLastError(const std::string& newLastError);
     ///
@@ -80,15 +77,10 @@ private:
     void closeFile();
     bool clearFile();
 
-    //    bool isHttpRedirect() const;
-
     void downloadFileFromBegining(const std::string& nameOfFile, const std::string& url);
     void downloadFileFromBegining(const QString& nameOfFile, const QString& url);
 
 private:
-    //    QScopedPointer<QNetworkAccessManager> _webCtrl;
-    //    QNetworkReply* _replay;
-
     mutable QMutex _progressBarMutex;
     mutable QMutex _fileAddressMutex;
     mutable QMutex _urlLocker;
@@ -102,6 +94,5 @@ private:
 
     std::ofstream _streamDownloadedData;
     curlpp::Easy _curlHandler;
-    int _stopRet;
 };
 #endif // FILEDOWNLOADER_H

@@ -2,9 +2,8 @@
 #include <QDebug>
 #include <QDir>
 #include <QMutexLocker>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QTimer>
+#include <QUrl>
 bool FileDownloader::operator==(const QUuid& uid) const
 {
     return id() == uid;
@@ -12,17 +11,7 @@ bool FileDownloader::operator==(const QUuid& uid) const
 
 FileDownloader::FileDownloader(QObject* parent)
     : QObject{parent}
-    , _stopRet(0)
 {
-    //    auto x = new QTimer(this);
-    //    x->setInterval(1000);
-    //    connect(x, &QTimer::timeout, this, [this]() {
-    //        if(_replay != nullptr)
-    //            std::cerr << _replay->isRunning() << _replay->errorString().toStdString()
-    //                      << _replay->bytesToWrite() << _replay->bytesAvailable()
-    //                      << _replay->waitForReadyRead(100) << isHttpRedirect();
-    //    });
-    //    x->start(1000);
     setId(QUuid::createUuid());
     connect(this, &FileDownloader::fileAddressChanged, this, [this]() {
         QUrl nativeAddress(fileCompleteAddress());
@@ -74,29 +63,9 @@ void FileDownloader::startDownload()
     if(urlValue.isValid() && QUrl(fileCompleteAddress()).isLocalFile() /* && openFile()*/)
     {
         downloadFileFromBegining(_downloadedFile.fileName(), urlValue.toString());
-        //        QNetworkRequest request(urlValue);
-        //        _webCtrl.reset(new QNetworkAccessManager());
-        //        connect(_webCtrl.get(), &QNetworkAccessManager::finished, this, [this]() {
-        //            _replay->deleteLater();
-        //            emit downloaded();
-        //        });
-        //        _replay = _webCtrl->get(request);
-        //        connect(_replay, &QNetworkReply::readyRead, this, [this]() {
-        //            QByteArray data = _replay->readAll();
-        //            qDebug() << "received data of size: " << data.size() << url();
-        //            _downloadedFile.write(data);
-        //        });
-        //        connect(_replay, &QNetworkReply::downloadProgress, this, &FileDownloader::downloadProgress);
-        //        _replay->waitForReadyRead(5000);
-        //        connect(_replay,
-        //                &QNetworkReply::errorOccurred,
-        //                this,
-        //                QOverload<QNetworkReply::NetworkError>::of(&FileDownloader::setLastError));
     }
     else
     {
-        //        qDebug() << urlValue.isValid() << QUrl(fileCompleteAddress()).isLocalFile() << openFile();
-
         qDebug() << __FILE__ << __LINE__ << _downloadedFile.errorString();
     }
 }
@@ -146,17 +115,6 @@ catch(...)
     return false;
 }
 
-//bool FileDownloader::isHttpRedirect() const
-//{
-//    if(_replay)
-//    {
-//        int statusCode = _replay->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-//        return statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 305 ||
-//               statusCode == 307 || statusCode == 308;
-//    }
-//    return false;
-//}
-
 void FileDownloader::setId(const QUuid& newId)
 {
     {
@@ -181,12 +139,6 @@ qreal FileDownloader::progressbar()
 void FileDownloader::stop()
 try
 {
-    //    if(_replay->isRunning())
-    //    {
-    //        _replay->abort();
-    //        _replay->close();
-    //    }
-    _stopRet = 1;
     _streamDownloadedData.close();
 }
 catch(...)
@@ -213,14 +165,9 @@ QString FileDownloader::lastError() const
     return _lastError;
 }
 
-void FileDownloader::setLastError(QNetworkReply::NetworkError newLastError)
-{
-    setLastError(newLastError);
-}
 void FileDownloader::setLastError(const QString& newLastError)
 {
     _lastError = newLastError;
-    //    _replay->deleteLater();
     emit errorOccured(newLastError);
 }
 
@@ -232,13 +179,11 @@ void FileDownloader::setLastError(const std::string& newLastError)
 void FileDownloader::downloadFileFromBegining(const std::string& nameOfFile, const std::string& url)
 try
 {
-    //    curlpp::Cleanup cleaner; // depricated!
     _streamDownloadedData.open(nameOfFile);
     _curlHandler.setOpt(new curlpp::options::NoProgress(false));
     _curlHandler.setOpt(
         new curlpp::options::ProgressFunction(curlpp::types::ProgressFunctionFunctor(
             [this](double dltotal, double dlnow, double ultotal, double ulnow) -> double {
-                //            setProgressbar(dlnow / dltotal);
                 if(0 == dltotal)
                 {
                     dltotal = 1;
