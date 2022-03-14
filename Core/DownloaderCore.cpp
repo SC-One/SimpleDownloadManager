@@ -2,46 +2,46 @@
 //#define TEST_USE_CASE
 DownloaderCore::DownloaderCore(QObject* parent)
     : QObject{parent}
-    , sizeOfModel(0)
+    , _model(new FileDownloaderModel())
 {
     qDebug() << QStringLiteral("DownloaderCore has threadpool with %1").arg(_pool.stackSize());
+    connect(this,
+            &DownloaderCore::newFileDownloaderAdded,
+            _model.get(),
+            &FileDownloaderModel::addFileDownloader,
+            Qt::QueuedConnection);
 }
 
 void DownloaderCore::startDownloadNewURL(const QString& url, const QString& fileAddressComplete)
 {
-    QSharedPointer<FileDownloader> newFIleDownloader(new FileDownloader());
-    newFIleDownloader->setUrl(url);
-    newFIleDownloader->setFileCompleteAddress(fileAddressComplete);
+    _pool.start([=]() {
+        QSharedPointer<FileDownloader> newFIleDownloader(new FileDownloader());
+        newFIleDownloader->setUrl(url);
+        newFIleDownloader->setFileCompleteAddress(fileAddressComplete);
+        insertNewModel(newFIleDownloader);
+        newFIleDownloader->start();
+    });
+}
+
+QWeakPointer<FileDownloaderModel> DownloaderCore::model() const
+{
+    return _model;
+}
+
+void DownloaderCore::insertNewModel(const QSharedPointer<FileDownloader>& newFIleDownloader)
+{
+
     _workers.insert(newFIleDownloader->id(), newFIleDownloader);
-    setSizeOfModel(getSizeOfModel() + 1);
-    _pool.start([this, newFIleDownloader]() { newFIleDownloader->start(); });
+    emit newFileDownloaderAdded(newFIleDownloader);
 }
 
-QVariantList DownloaderCore::model()
+void DownloaderCore::setModel(QSharedPointer<FileDownloaderModel> newModel)
 {
-    /*QList<FileDownloader*> */ QVariantList result;
-    auto const model = _workers.values();
-    for(auto const& item : model)
-    {
-        result.append(item.get());
-    }
-    return result;
-}
-
-int DownloaderCore::getSizeOfModel() const
-{
-    return sizeOfModel;
-}
-
-void DownloaderCore::setSizeOfModel(int newSizeOfModel)
-{
-    sizeOfModel = newSizeOfModel;
+    _model = newModel;
     emit modelUpdated();
 }
 
-//#ifdef TEST_USE_CASE
-//void addTestParams()
-//{
-
-//}
-//#endif
+QAbstractListModel* DownloaderCore::rawModel() const
+{
+    return _model.get();
+}

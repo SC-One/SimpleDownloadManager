@@ -1,20 +1,42 @@
 #include "FileDownloader.h"
+#include <QDebug>
+#include <QDir>
 #include <QMutexLocker>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-bool FileDownloader::operator==(const QUuid& uid)
+#include <QTimer>
+bool FileDownloader::operator==(const QUuid& uid) const
 {
     return id() == uid;
 }
 
 FileDownloader::FileDownloader(QObject* parent)
     : QObject{parent}
+    , _stopRet(0)
 {
-    connect(_webCtrl.get(), &QNetworkAccessManager::finished, this, [this]() {
-        _replay->deleteLater();
-        emit downloaded();
-    });
+    //    auto x = new QTimer(this);
+    //    x->setInterval(1000);
+    //    connect(x, &QTimer::timeout, this, [this]() {
+    //        if(_replay != nullptr)
+    //            std::cerr << _replay->isRunning() << _replay->errorString().toStdString()
+    //                      << _replay->bytesToWrite() << _replay->bytesAvailable()
+    //                      << _replay->waitForReadyRead(100) << isHttpRedirect();
+    //    });
+    //    x->start(1000);
     setId(QUuid::createUuid());
+    connect(this, &FileDownloader::fileAddressChanged, this, [this]() {
+        QUrl nativeAddress(fileCompleteAddress());
+        _downloadedFile.setFileName(QDir::toNativeSeparators(nativeAddress.toLocalFile()));
+    });
+    connect(this, &FileDownloader::errorOccured, this, [this](const QString& error) {
+        std::cerr << error.toStdString();
+    });
+}
+
+FileDownloader::~FileDownloader()
+{
+    std::cerr << "Deleted FileDownloader" << id().toString().toStdString();
+    stop();
 }
 
 QString FileDownloader::url() const
@@ -48,45 +70,61 @@ void FileDownloader::setFileCompleteAddress(const QString& newFileCompleteAddres
 
 void FileDownloader::startDownload()
 {
-    if(QUrl(url()).isValid() && QUrl(fileCompleteAddress()).isLocalFile() && openFile())
+    auto const& urlValue = QUrl(url());
+    if(urlValue.isValid() && QUrl(fileCompleteAddress()).isLocalFile() /* && openFile()*/)
     {
-        QNetworkRequest request(url());
-        _replay = _webCtrl->get(request);
-        connect(_replay, &QNetworkReply::readyRead, this, [this]() {
-            QByteArray data = _replay->readAll();
-            qDebug() << "received data of size: " << data.size() << url();
-            _downloadedFile.write(data);
-        });
-        connect(_replay, &QNetworkReply::downloadProgress, this, &FileDownloader::downloadProgress);
-        connect(_replay,
-                &QNetworkReply::errorOccurred,
-                this,
-                QOverload<QNetworkReply::NetworkError>::of(&FileDownloader::setLastError));
+        downloadFileFromBegining(_downloadedFile.fileName(), urlValue.toString());
+        //        QNetworkRequest request(urlValue);
+        //        _webCtrl.reset(new QNetworkAccessManager());
+        //        connect(_webCtrl.get(), &QNetworkAccessManager::finished, this, [this]() {
+        //            _replay->deleteLater();
+        //            emit downloaded();
+        //        });
+        //        _replay = _webCtrl->get(request);
+        //        connect(_replay, &QNetworkReply::readyRead, this, [this]() {
+        //            QByteArray data = _replay->readAll();
+        //            qDebug() << "received data of size: " << data.size() << url();
+        //            _downloadedFile.write(data);
+        //        });
+        //        connect(_replay, &QNetworkReply::downloadProgress, this, &FileDownloader::downloadProgress);
+        //        _replay->waitForReadyRead(5000);
+        //        connect(_replay,
+        //                &QNetworkReply::errorOccurred,
+        //                this,
+        //                QOverload<QNetworkReply::NetworkError>::of(&FileDownloader::setLastError));
+    }
+    else
+    {
+        //        qDebug() << urlValue.isValid() << QUrl(fileCompleteAddress()).isLocalFile() << openFile();
+
+        qDebug() << __FILE__ << __LINE__ << _downloadedFile.errorString();
     }
 }
 
 void FileDownloader::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
-    setProgressbar(qreal(bytesReceived) / bytesTotal);
+    setProgressbar(qreal(bytesReceived) / bytesTotal * 100);
 }
 
 bool FileDownloader::openFile()
 try
 {
+    clearFile();
     if(!_downloadedFile.isOpen())
     {
-        _downloadedFile.open(QIODevice::WriteOnly | QIODevice::Append);
-        return clearFile();
+        return _downloadedFile.open(QIODevice::WriteOnly | QIODevice::Append);
     }
     else
     {
         closeFile();
         openFile();
+        qDebug() << __FILE__ << __LINE__ << _downloadedFile.errorString();
     }
     return false;
 }
 catch(...)
 {
+    qDebug() << __FILE__ << __LINE__ << _downloadedFile.errorString();
     return false;
 }
 
@@ -107,6 +145,17 @@ catch(...)
 {
     return false;
 }
+
+//bool FileDownloader::isHttpRedirect() const
+//{
+//    if(_replay)
+//    {
+//        int statusCode = _replay->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+//        return statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 305 ||
+//               statusCode == 307 || statusCode == 308;
+//    }
+//    return false;
+//}
 
 void FileDownloader::setId(const QUuid& newId)
 {
@@ -132,11 +181,13 @@ qreal FileDownloader::progressbar()
 void FileDownloader::stop()
 try
 {
-    if(_replay->isRunning())
-    {
-        _replay->abort();
-        _replay->close();
-    }
+    //    if(_replay->isRunning())
+    //    {
+    //        _replay->abort();
+    //        _replay->close();
+    //    }
+    _stopRet = 1;
+    _streamDownloadedData.close();
 }
 catch(...)
 {
@@ -145,14 +196,7 @@ catch(...)
 
 void FileDownloader::start()
 {
-    if(_replay != nullptr)
-    {
-        //        if(_replay->isRunning())
-        //        {
-        //            _replay->close();
-        //        }
-        startDownload();
-    }
+    startDownload();
 }
 
 void FileDownloader::setProgressbar(qreal newProgressbar)
@@ -161,7 +205,7 @@ void FileDownloader::setProgressbar(qreal newProgressbar)
         QMutexLocker locker(&_progressBarMutex);
         _progressbar = newProgressbar;
     }
-    emit downloadProgressChanged();
+    emit downloadProgressChanged(newProgressbar);
 }
 
 QString FileDownloader::lastError() const
@@ -171,10 +215,59 @@ QString FileDownloader::lastError() const
 
 void FileDownloader::setLastError(QNetworkReply::NetworkError newLastError)
 {
-    setLastError(_replay->errorString());
+    setLastError(newLastError);
 }
 void FileDownloader::setLastError(const QString& newLastError)
 {
     _lastError = newLastError;
-    _replay->deleteLater();
+    //    _replay->deleteLater();
+    emit errorOccured(newLastError);
+}
+
+void FileDownloader::setLastError(const std::string& newLastError)
+{
+    setLastError(QString::fromStdString(newLastError));
+}
+
+void FileDownloader::downloadFileFromBegining(const std::string& nameOfFile, const std::string& url)
+try
+{
+    //    curlpp::Cleanup cleaner; // depricated!
+    _streamDownloadedData.open(nameOfFile);
+    _curlHandler.setOpt(new curlpp::options::NoProgress(false));
+    _curlHandler.setOpt(
+        new curlpp::options::ProgressFunction(curlpp::types::ProgressFunctionFunctor(
+            [this](double dltotal, double dlnow, double ultotal, double ulnow) -> double {
+                //            setProgressbar(dlnow / dltotal);
+                if(0 == dltotal)
+                {
+                    dltotal = 1;
+                    dlnow = 0;
+                }
+                dltotal /= 1024 / 1024;
+                dlnow /= 1024 / 1024;
+                downloadProgress(dlnow, dltotal);
+                return 0;
+            })));
+    _curlHandler.setOpt(new curlpp::options::WriteStream(&_streamDownloadedData));
+    _curlHandler.setOpt(new curlpp::options::Url(url));
+    _curlHandler.perform();
+    _streamDownloadedData.close();
+}
+catch(curlpp::LogicError& e)
+{
+    std::cerr << e.what() << std::endl;
+    setLastError(std::string("curlpp::LogicError -> ") + e.what());
+    std::cerr << "error" << std::endl;
+}
+catch(curlpp::RuntimeError& e)
+{
+    std::cerr << e.what() << std::endl;
+    setLastError(std::string("curlpp::RuntimeError -> ") + e.what());
+    std::cerr << "error" << std::endl;
+}
+
+void FileDownloader::downloadFileFromBegining(const QString& nameOfFile, const QString& url)
+{
+    downloadFileFromBegining(nameOfFile.toStdString(), url.toStdString());
 }

@@ -6,99 +6,58 @@ import QtQuick.Dialogs 1.1
 Rectangle {
     id:simpleDownloadManager
     radius: 6;
-    color:"gray"
-//    gradient:  Gradient {
-//        GradientStop {
-//            position: 0.0
-//            SequentialAnimation on color {
-//                loops: Animation.Infinite
-//                ColorAnimation { from: "#14148c"; to: "#0E1533"; duration: 5000 }
-//                ColorAnimation { from: "#0E1533"; to: "#14148c"; duration: 5000 }
-//            }
-//        }
-//        GradientStop {
-//            position: 1.0
-//            SequentialAnimation on color {
-//                loops: Animation.Infinite
-//                ColorAnimation { from: "#14aaff"; to: "#437284"; duration: 5000 }
-//                ColorAnimation { from: "#437284"; to: "#14aaff"; duration: 5000 }
-//            }
-//        }
-//    }
-    property var list: [];
+    color: "#ededed"
     Item {
         id: props
         HCoding.DownloaderCore{
             id:downloadManagerCore
-            onSizeOfModelChanged:
-                simpleDownloadManager.list = downloadManagerCore.model();
         }
-        FileDialog{
-            id:saveFile
-            onAccepted: fileAddress.text = fileUrl;
+        InputURLDialog {
+            id:inputNewUrl
+            width:simpleDownloadManager.width*0.77
+            height:simpleDownloadManager.height*0.77
+            visible: false;
+            onAccepted:{
+                downloadManagerCore.startDownloadNewURL(inputNewUrl.url , inputNewUrl.fileAddress);
+            }
         }
-
     }
-
-    Action{
-        onTriggered: saveFile.open();
-    }
-
     ColumnLayout
     {
         anchors.fill:parent
-        RowLayout
-        {
-            TextInput{
-                id:url
-                Layout.fillWidth: true
-                text:"http://dl.golsarmusic.ir/GolsarMusic-Root/99/07%20Mehr/15/cuban%20pete.mp3"
-            }
-            TextInput{
-                id:fileAddress
-                Layout.maximumWidth: 100
-                text:"file:///home/sc/prj/Qt/SimpleDownloadManager/build-SimpleDownloadManager-Desktop_Qt_5_15_2_GCC_64bit-Debug/MyFile"
-                Layout.fillWidth: true
-                onFocusChanged: {
-                    if(focus)
-                    {
-                        saveFile.open();
-                    }
-                }
-            }
-            Button{
-                text:"Download"
-                onClicked: downloadManagerCore.startDownloadNewURL(url.text , fileAddress.text);
-            }
+        Button{
+            id: insertNewDownload
+            text:"add new Download"
+            onClicked: inputNewUrl.open();
+            Layout.alignment: Qt.AlignHCenter
         }
 
-        GridLayout
-        {
+        Flow{
+            Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.alignment: Qt.AlignTop
+            onWidthChanged: console.log("Width: ",width)
+            onHeightChanged: console.log("height: ",height)
+            spacing: 10
             Repeater
             {
                 id:fileDownloaderRepeater
-                model:downloadManagerCore.sizeOfModel
+                model:downloadManagerCore.model
                 delegate: Rectangle{
-                    Layout.minimumHeight: 50
-                    Layout.minimumWidth: 170
-                    color:"white"
-                    RowLayout{
+                    id:rootDownloadItemWrapper
+                    property var viewDownloaderCore: WorkerInfo
+                    Layout.minimumHeight: 150
+                    Layout.minimumWidth: 150
+                    width:parent.width*0.3
+                    height:width
+                    color:"transparent"
+                    CircularProgressBar
+                    {
                         anchors.fill: parent
-                        Text{
-                            id:nameText
-                            text: simpleDownloadManager.list[fileDownloaderRepeater.count].fileAddress
-                        }
-                        ProgressBar {
-                            Layout.fillWidth: true
-                            value: simpleDownloadManager.list[fileDownloaderRepeater.count].progressbar;
-                            from : 0
-                            to : 100
-                        }
-                        Text{
-                            id:urlText
-                            text: simpleDownloadManager.list[fileDownloaderRepeater.count].url
-                        }
+                        toolTipText:rootDownloadItemWrapper.viewDownloaderCore.url
+                        value: rootDownloadItemWrapper.viewDownloaderCore.progressbar;
+                        from : 0
+                        to : 100
                     }
                 }
             }
