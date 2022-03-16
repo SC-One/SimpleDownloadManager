@@ -1,8 +1,10 @@
 #include "DownloaderCore.h"
 //#define TEST_USE_CASE
+#include <curlpp/Multi.hpp>
 DownloaderCore::DownloaderCore(QObject* parent)
     : QObject{parent}
     , _model(new FileDownloaderModel())
+    , _multiDownloader(new curlpp::Multi)
 {
     qDebug() << QStringLiteral("DownloaderCore has threadpool with %1").arg(_pool.stackSize());
     connect(this,
@@ -15,7 +17,7 @@ DownloaderCore::DownloaderCore(QObject* parent)
 void DownloaderCore::startDownloadNewURL(const QString& url, const QString& fileAddressComplete)
 {
     _pool.start([=]() {
-        QSharedPointer<FileDownloader> newFIleDownloader(new FileDownloader());
+        QSharedPointer<FileDownloader> newFIleDownloader(new FileDownloader(_multiDownloader));
         newFIleDownloader->setUrl(url);
         newFIleDownloader->setFileCompleteAddress(fileAddressComplete);
         insertNewModel(newFIleDownloader);

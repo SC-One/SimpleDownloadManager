@@ -20,7 +20,7 @@ Item {
     }
     Behavior on value {
         NumberAnimation{
-            duration: 16     // 60 hertz
+            duration: 50    // ms -> FIXME need calculate correct constant!
         }
     }
 

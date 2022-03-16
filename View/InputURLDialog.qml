@@ -9,10 +9,7 @@ Dialog {
     property alias url: linkText.text
     property alias fileAddress: fileLocation.text
     function resetInternalAddresses(){
-        url="https://camo.githubusercontent.com/7659176ba6d3ca1d608f17d5"+
-                "f88cbcd6ab31e960cb03369a46e2ac8dcb164aff/68747470733a2f2f73362e"+
-                "7575706c6f61642e69722f66696c65732f726573706f6e736976655f616e616"+
-                "c6f675f636c6f636b5f716d6c5f386731312e676966";
+        url="http://0.0.0.0:8080/file20.txt";
         fileAddress = "";
     }
 

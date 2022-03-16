@@ -4,10 +4,15 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QRunnable>
+#include <QSharedPointer>
 #include <QThread>
 #include <QThreadPool>
 #include <QUuid>
 #include <QVector>
+namespace curlpp
+{
+class Multi;
+}
 class DownloaderCore : public QObject
 {
     Q_OBJECT
@@ -37,5 +42,7 @@ private:
     QThreadPool _pool;
     QSharedPointer<FileDownloaderModel> _model;
     QMap<QUuid, QSharedPointer<FileDownloader>> _workers;
+    //    curlpp::Cleanup _cleaner; // deprecated
+    QSharedPointer<curlpp::Multi> _multiDownloader;
 };
 #endif // DOWNLOADERCORE_H
