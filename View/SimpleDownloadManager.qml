@@ -36,8 +36,6 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignTop
-            onWidthChanged: console.log("Width: ",width)
-            onHeightChanged: console.log("height: ",height)
             spacing: 10
             Repeater
             {

@@ -15,6 +15,7 @@
 #include <atomic>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Exception.hpp>
+#include <curlpp/Multi.hpp>
 #include <curlpp/Options.hpp>
 #include <curlpp/cURLpp.hpp>
 #include <fstream>
@@ -34,6 +35,7 @@ public:
         Completed
     };
     explicit FileDownloader(QObject* parent = nullptr);
+    FileDownloader(const QWeakPointer<curlpp::Multi>& multiDownloader, QObject* parent = nullptr);
     ~FileDownloader();
     QString url() const;
     void setUrl(const QString& newUrl);
@@ -53,6 +55,9 @@ public:
     ///
     void start();
     QUuid id() const;
+
+    QWeakPointer<curlpp::Multi> multiDownloader() const;
+    void setMultiDownloader(QWeakPointer<curlpp::Multi> newMultiDownloader);
 
 signals:
     void downloaded();
@@ -103,5 +108,7 @@ private:
     std::ofstream _streamDownloadedData;
     curlpp::Easy _curlHandler;
     int _stopRet;
+
+    QWeakPointer<curlpp::Multi> _multiDownloader;
 };
 #endif // FILEDOWNLOADER_H

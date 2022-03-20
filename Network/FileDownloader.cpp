@@ -33,6 +33,12 @@ FileDownloader::FileDownloader(QObject* parent)
     });
 }
 
+FileDownloader::FileDownloader(const QWeakPointer<curlpp::Multi>& multiDownloader, QObject* parent)
+    : FileDownloader(parent)
+{
+    setMultiDownloader(multiDownloader);
+}
+
 FileDownloader::~FileDownloader()
 {
     std::cerr << "Deleted FileDownloader" << id().toString().toStdString();
@@ -252,6 +258,25 @@ try
     _curlHandler.setOpt(new curlpp::options::WriteStream(&_streamDownloadedData));
     _curlHandler.setOpt(new curlpp::options::Url(url));
     _curlHandler.perform();
+    curlpp::Cleanup clean;
+
+    //    auto const& multiDownloader = _multiDownloader.lock();
+    //    if(!multiDownloader.isNull())
+    {
+        //        int nbHandle;
+        //        multiDownloader->add(&_curlHandler);
+        //        multiDownloader->perform(&nbHandle);
+        //        while(nbHandle)
+        //        {
+        //            while(!multiDownloader->perform(&nbHandle))
+        //                std::cerr << "here" << std::endl;
+        //        };
+        //        if(!multiDownloader->perform(&nbHandle))
+        //        {
+        //            throw;
+        //        }
+        //        setLastError(QString::number(nbHandle));
+    }
     _streamDownloadedData.close();
 }
 catch(curlpp::LogicError& e)
@@ -266,8 +291,23 @@ catch(curlpp::RuntimeError& e)
     setLastError(std::string("curlpp::RuntimeError -> ") + e.what());
     std::cerr << "error" << std::endl;
 }
+catch(...)
+{
+    std::cerr << "multiDownloader can't perform on id:" << id().toString().toStdString()
+              << std::endl;
+}
 
 void FileDownloader::downloadFileFromBegining(const QString& nameOfFile, const QString& url)
 {
     downloadFileFromBegining(nameOfFile.toStdString(), url.toStdString());
+}
+
+QWeakPointer<curlpp::Multi> FileDownloader::multiDownloader() const
+{
+    return _multiDownloader;
+}
+
+void FileDownloader::setMultiDownloader(QWeakPointer<curlpp::Multi> newMultiDownloader)
+{
+    _multiDownloader = newMultiDownloader;
 }
