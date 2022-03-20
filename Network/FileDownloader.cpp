@@ -241,40 +241,41 @@ try
     //    curlpp::Cleanup cleaner; // depricated!
     _streamDownloadedData.open(nameOfFile);
     _curlHandler.setOpt(new curlpp::options::NoProgress(false));
-    static const auto writeCallBack =
-        [this](double dltotal, double dlnow, double ultotal, double ulnow) -> double {
-        //            setProgressbar(dlnow / dltotal);
-        if(0 == dltotal)
-        {
-            dltotal = 1;
-            dlnow = 0;
-        }
-        dltotal /= 1024 / 1024;
-        dlnow /= 1024 / 1024;
-        downloadProgress(dlnow, dltotal);
-        return 0;
-    };
-    _curlHandler.setOpt(new curlpp::options::ProgressFunction(
-        curlpp::types::ProgressFunctionFunctor(writeCallBack)));
+    _curlHandler.setOpt(
+        new curlpp::options::ProgressFunction(curlpp::types::ProgressFunctionFunctor(
+            [this](double dltotal, double dlnow, double ultotal, double ulnow) -> double {
+                //            setProgressbar(dlnow / dltotal);
+                if(0 == dltotal)
+                {
+                    dltotal = 1;
+                    dlnow = 0;
+                }
+                dltotal /= 1024 / 1024;
+                dlnow /= 1024 / 1024;
+                downloadProgress(dlnow, dltotal);
+                return 0;
+            })));
     _curlHandler.setOpt(new curlpp::options::WriteStream(&_streamDownloadedData));
     _curlHandler.setOpt(new curlpp::options::Url(url));
-    //    _curlHandler.perform();
-    auto const& multiDownloader = _multiDownloader.lock();
-    if(!multiDownloader.isNull())
+    _curlHandler.perform();
+    curlpp::Cleanup clean;
+
+    //    auto const& multiDownloader = _multiDownloader.lock();
+    //    if(!multiDownloader.isNull())
     {
-        int nbHandle;
-        multiDownloader->add(&_curlHandler);
-        multiDownloader->perform(&nbHandle);
-        while(nbHandle)
-        {
-            while(!multiDownloader->perform(&nbHandle))
-                std::cerr << "here" << std::endl;
-        };
+        //        int nbHandle;
+        //        multiDownloader->add(&_curlHandler);
+        //        multiDownloader->perform(&nbHandle);
+        //        while(nbHandle)
+        //        {
+        //            while(!multiDownloader->perform(&nbHandle))
+        //                std::cerr << "here" << std::endl;
+        //        };
         //        if(!multiDownloader->perform(&nbHandle))
         //        {
         //            throw;
         //        }
-        setLastError(QString::number(nbHandle));
+        //        setLastError(QString::number(nbHandle));
     }
     _streamDownloadedData.close();
 }
