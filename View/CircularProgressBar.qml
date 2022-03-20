@@ -11,12 +11,16 @@ Item {
     property color titleColor : "#3b0069"
     property string title: value.toFixed(2) + "%"
     property string toolTipText: ""
+    property real lineWidth: props.defaultWidth/10
     signal clicked()
     onClicked: console.log("clicked")
     onValueChanged: {
         if(value>to)
             value = to;
         usageCanvas.requestPaint();
+        if(value >= 100){
+            root.state = "HorizontalProgressBar"
+        }
     }
     Behavior on value {
         NumberAnimation{
@@ -24,9 +28,76 @@ Item {
         }
     }
 
-
-    property real lineWidth: props.defaultWidth/10
-
+    property alias propertyAnimation: changer;
+    state: "CircularProgress"
+    states: [
+        State {
+            property real oldValue: 0
+            name: "HorizontalProgressBar"
+            PropertyChanges {
+                target: prvProps
+                curveRatio: 0.0001;
+            }
+            PropertyChanges {
+                target: usageCanvas
+                visible:false
+            }
+            PropertyChanges {
+                target: bgCanvas
+                visible:false
+            }
+            PropertyChanges {
+                id:titleYChanger
+                target: title
+                y:Math.abs(root.lineWidth-title.height/2)
+            }
+        },
+        State {
+            name: "CircularProgress"
+            PropertyChanges {
+                target: prvProps
+                curveRatio: 0.9999;
+            }
+            PropertyChanges {
+                target: usageCanvas
+                visible:true
+            }
+            PropertyChanges {
+                target: bgCanvas
+                visible:true
+            }
+            PropertyChanges {
+                target: title
+                y:root.height/2-title.height/2
+            }
+        }
+    ]
+    Item {
+        id: prvProps
+        property real curveRatio: 0
+        Behavior on curveRatio { PropertyAnimation {id:changer; duration:1400; easing.type:Easing.InOutBounce;} }
+        onCurveRatioChanged: animatorCanvas.requestPaint();
+    }
+    Canvas{
+        id:animatorCanvas
+        anchors.fill: parent
+        onPaint: {
+            var ctx = animatorCanvas.getContext('2d');
+            ctx.strokeStyle = root.usageColor;
+            ctx.lineWidth = root.lineWidth;
+            ctx.lineCap = "round"
+            ctx.beginPath();
+            ctx.clearRect(0, 0, animatorCanvas.width, animatorCanvas.height);
+            const middleAngle = -Math.PI / 2;
+            var startAngle = middleAngle + prvProps.curveRatio * Math.PI;
+            var stopAngle = middleAngle - prvProps.curveRatio * Math.PI;
+            var xPoint = animatorCanvas.width/2;
+            var yPoint = animatorCanvas.height/2 * 1 / prvProps.curveRatio ;
+            var radius = yPoint-root.lineWidth;
+            ctx.arc(xPoint, yPoint, radius, startAngle , stopAngle , true);
+            ctx.stroke();
+        }
+    }
     Item {
         id: props
         property real defaultWidth: Math.min(root.width,root.height)
@@ -42,7 +113,14 @@ Item {
         color:root.titleColor
         font.pixelSize: props.defaultWidth/10
         font.bold: true
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        y:root.height/2-title.height/2
+        Behavior on y {
+            NumberAnimation{
+                duration: changer.duration;
+                easing: changer.easing
+            }
+        }
     }
     ToolTip{
         id:tltip
